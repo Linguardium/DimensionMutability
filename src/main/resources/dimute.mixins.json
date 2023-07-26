@@ -3,9 +3,8 @@
   "package": "mod.linguardium.dimute.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "LevelPropertiesDuplicator",
-    "ServerWorldMixin",
-    "UnmodifiableLevelPropertiesAccessor"
+    "MinecraftServerMixin",
+    "ServerWorldMixin"
   ],
   "client": [],
   "server": [],

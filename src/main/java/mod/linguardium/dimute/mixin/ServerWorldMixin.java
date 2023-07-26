@@ -1,6 +1,6 @@
 package mod.linguardium.dimute.mixin;
 
-import mod.linguardium.dimute.api.copyableProperties;
+import mod.linguardium.dimute.api.SubordinateLevelProperties;
 import net.minecraft.network.Packet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
@@ -10,10 +10,10 @@ import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.MutableWorldProperties;
+import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.level.LevelProperties;
 import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.UnmodifiableLevelProperties;
 import net.minecraft.world.level.storage.LevelStorage;
@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
+import static mod.linguardium.dimute.Main.config;
+
 @Mixin(ServerWorld.class)
 public abstract class ServerWorldMixin extends World {
 
@@ -46,21 +48,20 @@ public abstract class ServerWorldMixin extends World {
 
     @Inject(at=@At(value="RETURN"),method="<init>")
     private void modifyServerWorldSettings(MinecraftServer server, Executor workerExecutor, LevelStorage.Session session, ServerWorldProperties properties, RegistryKey<World> worldKey, DimensionOptions dimensionOptions, WorldGenerationProgressListener worldGenerationProgressListener, boolean debugWorld, long seed, List<Spawner> spawners, boolean shouldTickTime, CallbackInfo ci) {
-        if (!debugWorld && !worldKey.getValue().getNamespace().equals("minecraft") ) { // dont modify nether and end dimensions
-            if (this.worldProperties instanceof UnmodifiableLevelProperties) {
-                this.worldProperties = mutableProperties(this.worldProperties);
-            }
-            this.shouldTickTime=true;
+        if (worldKey.equals(OVERWORLD)) {
+            return;
         }
-    }
+        if (properties instanceof UnmodifiableLevelProperties && (config.ApplyToMinecraftNamespace || !worldKey.getValue().getNamespace().equals("minecraft"))) {
+            PersistentStateManager manager=null;
+            try {
+                manager = server.getOverworld().getPersistentStateManager();
+            }catch (NullPointerException ignored) { }
 
-    private static ServerWorldProperties mutableProperties(ServerWorldProperties immutable) {
-            ServerWorldProperties baseProperties = ((UnmodifiableLevelPropertiesAccessor)immutable).getWorldProperties();
-            if (baseProperties instanceof LevelProperties) {
-                return ((copyableProperties)baseProperties).copy();
-            }else {
-                return baseProperties;
-            }
+            SubordinateLevelProperties props =new SubordinateLevelProperties(server.getSaveProperties(),server.getSaveProperties().getMainWorldProperties());
+            props.loadStateFromPersistentStateManager(manager, worldKey);
+            this.shouldTickTime= shouldTickTime || !debugWorld;
+            this.worldProperties=props;
+        }
     }
 
     @Redirect(at=@At(value="INVOKE",target="Lnet/minecraft/server/PlayerManager;sendToAll(Lnet/minecraft/network/Packet;)V"),method="tickWeather")
