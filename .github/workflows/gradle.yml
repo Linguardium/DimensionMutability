@@ -24,5 +24,7 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+    - name: Set Permissions
+      run: chmod +rx ./gradlew
     - name: Build with Gradle
       run: ./gradlew build
