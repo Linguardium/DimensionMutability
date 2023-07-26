@@ -25,6 +25,4 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
     - name: Build with Gradle
-      uses: ./gradlew
-      with:
-        arguments: build
+      run: gradlew build
