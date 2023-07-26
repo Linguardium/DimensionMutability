@@ -1,10 +1,10 @@
 package mod.linguardium.dimute.api;
 
 import mod.linguardium.dimute.impl.SubordinateLevelPropertiesState;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.crash.CrashReportSection;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.*;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.level.ServerWorldProperties;
